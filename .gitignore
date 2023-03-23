@@ -1,0 +1,5 @@
+.vscode/
+credentials.json
+logs/
+data/
+src/__pycache__/
