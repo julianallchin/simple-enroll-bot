@@ -1,0 +1,6 @@
+loguru==0.6.0
+rich==13.3.2
+selenium==4.8.3
+urlmatch==1.0.1
+webdriver_manager==3.8.5
+xmltodict==0.13.0
