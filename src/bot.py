@@ -18,7 +18,8 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from urlmatch import urlmatch
 from webdriver_manager.chrome import ChromeDriverManager
-
+from selenium.webdriver.chrome.service import Service
+from webdriver_manager.core.utils import ChromeType
 from course import Course
 
 faulthandler.enable()
@@ -52,8 +53,9 @@ class Bot:
         options = webdriver.ChromeOptions()
         options.add_argument("--headless")
 
-        self.driver = webdriver.Chrome(
-            ChromeDriverManager().install(), options=options)
+        # Install the ChromeDriverManager locally
+        service = Service(ChromeDriverManager(path=".chromedriver").install())
+        self.driver = webdriver.Chrome(service=service, options=options)
 
     def get_courses(self):
         with open("src/js/get_course.js", "r") as f:
@@ -137,6 +139,7 @@ class Bot:
         table = Table(show_header=True, header_style="bold green",
                       padding=(0, 1), show_lines=True, expand=True)
         table.add_column("Course", justify="left", max_width=20)
+        table.add_column("Time", justify="left")
         table.add_column("Status", justify="left")
         table.add_column("Info", justify="left", max_width=80)
        # Simulate getting all_courses (you should replace this with your actual logic)
@@ -146,7 +149,7 @@ class Bot:
 
         for course in sorted(self.courses, key=lambda x: x.name()):
             status = "✅ Enrolled" if course.status == "E" else "Not Enrolled"
-            table.add_row(course.name(), status, course.error)
+            table.add_row(course.name(), course.get_time(), status, course.error)
 
         table_panel = Panel(table, border_style="green",
                             expand=True, padding=(0, 1))
@@ -187,7 +190,7 @@ class Bot:
                 else:
                     self.login(needs_duo=True)
 
-                time.sleep(2)
+                time.sleep(3)
                 self.get_courses()
                 self.print_course_table()
 
@@ -222,9 +225,9 @@ class Bot:
 
         # Wait for url change
         current = self.driver.current_url
-        self.driver.find_element_by_name("username").send_keys(self.username)
-        self.driver.find_element_by_name("password").send_keys(self.password)
-        self.driver.find_element_by_name("_eventId_proceed").click()
+        self.driver.find_element("name", "username").send_keys(self.username)
+        self.driver.find_element("name", "password").send_keys(self.password)
+        self.driver.find_element("name", "_eventId_proceed").click()
 
         WebDriverWait(self.driver, 20).until(
             lambda d: d.current_url != current)
@@ -247,9 +250,13 @@ class Bot:
                 # Go back to Duo Security page, it will b invalid, but whatev
                 self.driver.get(current)
                 cookies = self.driver.get_cookies()
-                cookies_path = "data/duo_cookies.json"
-                with open(cookies_path, "w") as f:
-                    json.dump(cookies, f)
+
+                if not os.path.exists("data"):
+                    os.makedirs("data")
+                f = open("data/duo_cookies.json", "w+")
+                json.dump(cookies, f)
+                f.close()
+
                 self.set_status("Saved Duo Security cookies!")
                 self.driver.get(url)
         WebDriverWait(self.driver, 20).until(lambda d: d.current_url == url)

@@ -41,6 +41,9 @@ class Course:
         self.career_code = obj["careerCode"]
         self.schedule_entries = [ScheduleEntry(
             entry) for entry in obj["scheduleEntries"]]
+        
+    def get_time(self):
+        return self.schedule_entries[0].start_time + " - " + self.schedule_entries[0].end_time
 
     def name(self):
         return f"{self.subject} {self.course_number}"
