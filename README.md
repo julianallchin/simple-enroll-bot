@@ -1,6 +1,15 @@
 # Simple Enroll Bot
+<img width="1109" alt="image" src="https://user-images.githubusercontent.com/20829244/228094306-074b83fe-eebb-43f0-b81c-890d5964dcfd.png">
 
 Simple Enroll Bot is a Python script that automates the enrollment process for Stanford University courses. It constantly updates the user's planned courses and attempts to enroll them in the background so they can slip in if there is an opening.
+
+
+
+## Dependencies
+
+This script depends on Chrome browser and ChromeDriver to run the headless browser. You need to have Chrome installed on your system and make sure it is updated to the latest version. You also need to have ChromeDriver installed in the same directory as the script. The script will automatically download the latest version of ChromeDriver using `webdriver_manager` package.
+
+This script also depends on several Python packages, such as selenium, urlmatch, xmltodict, loguru and rich. You can install them using the requirements.txt file as described in the installation section.
 
 ## Installation
 
@@ -21,7 +30,7 @@ Before running the script, you need to create a `credentials.json` file in the s
 }
 ```
 
-Don't worry, these are only kept locally.
+*Don't worry, these are only kept locally.*
 
 You also need to plan your courses on Simple Enroll and make sure they are in the "Planned Courses" section.
 
