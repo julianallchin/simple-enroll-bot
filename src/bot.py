@@ -155,6 +155,61 @@ class Bot:
         # Get the updated list of courses from the website again.
         self.get_courses()
 
+    def swap_french(self):
+        # Enroll in all planned courses using a JavaScript script
+
+        # Get the updated list of courses from the website first.
+        self.get_courses()
+
+        # Print the current course table to show their status and info.
+        self.print_course_table()
+
+        # Set the status message to indicate that enrollment is in progress.
+        self.set_status("Enrolling courses...")
+
+        # Read the JavaScript script from a file that performs batch enrollment.
+        with open("src/js/swap_french.js", "r") as f:
+            js = f.read()
+
+        # Execute the script asynchronously and get the result as an XML string.
+        result = self.driver.execute_async_script(js)
+
+        # Parse the XML string into a dictionary using xmltodict module.
+        data = xmltodict.parse(result)
+
+        # Get the list of errors from the dictionary, if any.
+        errors = data.get("STF_SE", {}).get("Errors", [])
+        parsed_errors = []
+        
+        # For each error in the list, extract the subject and message fields and store them in a new list of dictionaries.
+        for error in errors:
+            if isinstance(error, dict):
+                error_list = error.get("Error", [])
+
+                for err in error_list:
+                    subject = err.get("@Subject", "")
+                    message = err.get("#text", "")
+                    parsed_errors.append(
+                        {"Subject": subject, "Message": message})
+
+        # Find each course in planned_courses and update the error attribute with the corresponding message from parsed_errors.
+        for course in self.courses:
+            if not course.is_planned:
+                continue
+            subject = course.subject + " " + course.course_number
+            for error in parsed_errors:
+                if error["Subject"] == subject:
+                    course.error = error["Message"].replace(
+                        "<br>", "").split("\n")[0]
+
+        # Refresh the driver to update the website state.
+        self.driver.refresh()
+        time.sleep(4)
+
+        # Get the updated list of courses from the website again.
+        self.get_courses()
+    
+
     def set_status(self, status, log=True):
         # Set the status message to be displayed on the live console and optionally log it to a file.
 
@@ -273,7 +328,8 @@ class Bot:
                     time.sleep(2)
 
                     # Try to enroll in planned courses using batch enrollment and print the updated course table.
-                    self.batch_enroll()
+                    # self.batch_enroll()
+                    self.swap_french()
                     self.print_course_table()
 
                     # Increment the number of attempts and update the attempts layout with it.
